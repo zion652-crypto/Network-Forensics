@@ -1,0 +1,40 @@
+ Investigation Report: Vishing (Voice Phishing) Analysis
+
+ 1. Executive Summary
+This report documents a forensic investigation into a suspected Vishing (Voice Phishing) attack. A user reported a suspicious call from an individual impersonating a bank representative. By analyzing network traffic captured during the incident, I successfully identified the call structure, extracted the attacker’s phone number, and reconstructed the audio payload to confirm fraudulent activity.
+
+2. Methodology and Initial Triage
+The investigation was conducted by analyzing a packet capture (PCAP) file to identify communication patterns. Given the nature of the incident, the focus was narrowed to Voice over IP (VOIP) protocols.
+Initial triage revealed a total of 18,348 RTP (Real-time Transport Protocol) packets. RTP is the protocol responsible for the delivery of audio and video over IP networks. The high volume of RTP traffic confirmed that a significant voice session had taken place, providing a starting point for deeper analysis.
+
+3. Protocol Analysis
+
+3.1 Signaling Identification
+To understand the timing and participants of the call, the traffic was filtered for SIP (Session Initiation Protocol). SIP handles the setup, routing, and termination of VOIP calls. By analyzing the UDP streams, I identified a specific session with a "200 OK" status code. This status confirms that the call was successfully established and the connection between the attacker and the victim was completed.
+
+3.2 Evidence Extraction
+Critical evidence was located in Packet 829. By inspecting the Session Initiation Protocol details, the following data points were extracted:
+ * Victim Identification:Extracted via the "To" header and Request-URI field.
+ * Attacker Identification: Extracted via the "From" header, revealing the originating phone number.
+This data verified that the call originated from an external party and successfully reached the targeted internal user.
+
+4. Audio Forensics and Reconstruction
+Once the signaling path was mapped, the investigation moved to reassembling the actual audio. Using specialized VOIP analysis tools, the flow of the conversation was visualized on a timeline to confirm the call duration.
+Because the traffic was unencrypted, I performed a reconstruction of the audio stream. By selecting the forward and reverse RTP streams, I reassembled the digital audio packets into a playable format. Upon playback, the audio confirmed the attacker utilized social engineering tactics, specifically requesting sensitive bank credentials under the guise of a security check.
+
+5. Technical Implications: RTP vs. SRTP
+A primary finding of this investigation is the vulnerability created by unencrypted traffic. The use of standard RTP instead of SRTP (Secure Real-time Transport Protocol) allowed for the following:
+ * Eavesdropping: The ability to record and play back private conversations.
+ * Data Leakage:The exposure of phone numbers and call metadata within the SIP headers.
+ * Man-in-the-Middle (MitM) Risks:The potential for an attacker on the network to intercept and manipulate voice data.
+
+6. Recommendations and Mitigation
+To prevent similar incidents in the future, the following security measures are recommended:
+ 1. Implement SRTP:Transition all voice communications to Secure RTP to ensure audio payloads are encrypted and unreadable to unauthorized parties.
+
+ 2. Enable SIP over TLS: Encrypt signaling traffic to hide metadata, such as phone numbers and user identities, from network sniffers.
+
+ 3. Phishing Awareness Training: Conduct regular training sessions to help users recognize social engineering tactics, emphasizing that legitimate institutions will not ask for sensitive credentials over the phone.
+
+7. Conclusion
+The investigation successfully confirmed a phishing attack by tracing the session from the initial handshake to the final audio payload. The ability to reconstruct the call provided the evidence necessary to document the attacker's intent. This case reinforces the necessity of protocol-level encryption and vigilant network monitoring in modern communication environments.
